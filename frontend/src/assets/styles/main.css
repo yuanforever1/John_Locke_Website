@@ -1,0 +1,302 @@
+/* =============================================================
+   洛克手稿转写平台 —— 全局样式
+   古典人文风格：羊皮纸底色、墨黑正文、赭石与暗金点缀，衬线字体。
+   ============================================================= */
+
+:root {
+  --paper: #f4eddc;
+  --paper-2: #efe6d2;
+  --paper-3: #e8dcc2;
+  --ink: #221c14;
+  --ink-soft: #4b3f2f;
+  --ink-faint: #7a6a52;
+  --line: #cbb992;
+  --line-soft: #ddceac;
+  --gold: #a8802f;
+  --gold-deep: #8a6420;
+  --sepia: #6b4f2c;
+  --burgundy: #6e2b2b;
+  --burgundy-deep: #521f1f;
+  --ivory: #fbf6ea;
+  --shadow: rgba(52, 40, 22, 0.16);
+
+  --serif-latin: 'Cormorant Garamond', 'EB Garamond', serif;
+  --serif-body: 'EB Garamond', 'Noto Serif SC', Georgia, serif;
+  --serif-cjk: 'Noto Serif SC', 'Songti SC', serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--serif-body);
+  color: var(--ink);
+  background-color: var(--paper);
+  background-image:
+    radial-gradient(circle at 15% 20%, rgba(168, 128, 47, 0.06), transparent 45%),
+    radial-gradient(circle at 85% 75%, rgba(110, 43, 43, 0.05), transparent 45%);
+  font-size: 17px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--serif-latin);
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: 0.01em;
+  margin: 0 0 0.5em;
+}
+
+a {
+  color: var(--burgundy);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--gold-deep);
+}
+
+p {
+  margin: 0 0 1em;
+}
+
+/* 布局容器 */
+.container {
+  width: min(1180px, 92vw);
+  margin: 0 auto;
+}
+
+.container-narrow {
+  width: min(760px, 92vw);
+  margin: 0 auto;
+}
+
+/* 小标题 / 眉题 */
+.eyebrow {
+  font-family: var(--serif-cjk);
+  font-size: 0.72rem;
+  letter-spacing: 0.42em;
+  text-transform: uppercase;
+  color: var(--gold-deep);
+  margin-bottom: 1rem;
+  font-weight: 500;
+}
+
+/* 花饰分隔线 */
+.ornament {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  color: var(--gold);
+  margin: 2.5rem 0;
+}
+.ornament::before,
+.ornament::after {
+  content: '';
+  height: 1px;
+  flex: 1;
+  max-width: 140px;
+  background: linear-gradient(90deg, transparent, var(--line));
+}
+.ornament::after {
+  background: linear-gradient(90deg, var(--line), transparent);
+}
+.ornament .diamond {
+  font-size: 0.8rem;
+  letter-spacing: 0.5em;
+}
+
+/* 按钮 */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: var(--serif-cjk);
+  font-size: 0.9rem;
+  letter-spacing: 0.14em;
+  padding: 0.7rem 1.6rem;
+  border: 1px solid var(--ink);
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  transition: all 0.22s ease;
+  border-radius: 1px;
+}
+.btn:hover {
+  background: var(--ink);
+  color: var(--ivory);
+}
+.btn-primary {
+  background: var(--burgundy);
+  border-color: var(--burgundy);
+  color: var(--ivory);
+}
+.btn-primary:hover {
+  background: var(--burgundy-deep);
+  border-color: var(--burgundy-deep);
+  color: var(--ivory);
+}
+.btn-gold {
+  border-color: var(--gold-deep);
+  color: var(--gold-deep);
+}
+.btn-gold:hover {
+  background: var(--gold-deep);
+  color: var(--ivory);
+}
+.btn-sm {
+  padding: 0.4rem 0.95rem;
+  font-size: 0.78rem;
+}
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* 卡片 / 纸面 */
+.panel {
+  background: var(--ivory);
+  border: 1px solid var(--line-soft);
+  box-shadow: 0 2px 18px var(--shadow);
+}
+
+/* 表单 */
+.field {
+  margin-bottom: 1.3rem;
+}
+.field label {
+  display: block;
+  font-family: var(--serif-cjk);
+  font-size: 0.8rem;
+  letter-spacing: 0.16em;
+  color: var(--ink-soft);
+  margin-bottom: 0.5rem;
+}
+.field input,
+.field textarea {
+  width: 100%;
+  padding: 0.7rem 0.9rem;
+  font-family: var(--serif-body);
+  font-size: 1rem;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 1px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.field input:focus,
+.field textarea:focus {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(168, 128, 47, 0.12);
+}
+
+/* 提示 */
+.alert {
+  padding: 0.7rem 1rem;
+  border-left: 3px solid var(--burgundy);
+  background: rgba(110, 43, 43, 0.06);
+  color: var(--burgundy-deep);
+  font-size: 0.9rem;
+  margin-bottom: 1.2rem;
+}
+.alert-success {
+  border-left-color: var(--gold-deep);
+  background: rgba(168, 128, 47, 0.1);
+  color: var(--sepia);
+}
+
+/* 徽记状态 */
+.badge {
+  display: inline-block;
+  font-family: var(--serif-cjk);
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  padding: 0.18rem 0.6rem;
+  border: 1px solid var(--line);
+  color: var(--ink-soft);
+  background: var(--paper-2);
+}
+.badge-done {
+  border-color: var(--gold-deep);
+  color: var(--gold-deep);
+}
+.badge-failed {
+  border-color: var(--burgundy);
+  color: var(--burgundy);
+}
+.badge-processing {
+  border-color: var(--sepia);
+  color: var(--sepia);
+}
+
+/* 滚动条 */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--paper-2);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--line);
+  border: 2px solid var(--paper-2);
+}
+
+/* 工具类 */
+.text-center {
+  text-align: center;
+}
+.muted {
+  color: var(--ink-faint);
+}
+.small {
+  font-size: 0.85rem;
+}
+.mono-note {
+  font-family: var(--serif-body);
+  font-style: italic;
+  color: var(--ink-faint);
+}
+
+/* 页面过渡 */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.35s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* 加载点 */
+.loader {
+  display: inline-block;
+  width: 1.1em;
+  height: 1.1em;
+  border: 2px solid var(--line);
+  border-top-color: var(--gold-deep);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  vertical-align: -0.2em;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
