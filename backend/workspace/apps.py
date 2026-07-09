@@ -5,3 +5,6 @@ class WorkspaceConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
     name = "workspace"
     verbose_name = "用户工作区"
+
+    def ready(self):
+        from . import signals  # noqa: F401
