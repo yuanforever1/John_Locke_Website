@@ -1,0 +1,28 @@
+[Unit]
+Description=John Locke 手稿转写平台 (gunicorn)
+After=network.target
+
+[Service]
+Type=notify
+# 运行服务的系统用户/用户组，按实际情况修改
+User=deploy
+Group=deploy
+# 项目后端目录（含 manage.py）
+WorkingDirectory=/opt/john-locke/backend
+# 环境变量从 backend/.env 读取（Django settings 里已用 dotenv 加载）
+# gunicorn 用项目 venv 中的可执行文件
+ExecStart=/opt/john-locke/backend/.venv/bin/gunicorn \
+    --workers 3 \
+    --bind 127.0.0.1:8000 \
+    --timeout 300 \
+    --access-logfile - \
+    --error-logfile - \
+    locke_platform.wsgi:application
+Restart=on-failure
+RestartSec=5s
+# 崩溃/重启时保留日志到 journald
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

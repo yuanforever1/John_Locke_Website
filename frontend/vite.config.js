@@ -16,5 +16,6 @@ export default defineConfig({
       '/api': 'http://127.0.0.1:8000',
       '/media': 'http://127.0.0.1:8000',
     },
+    allowedHosts: ['john-locke.ccwu.cc']
   },
 })
