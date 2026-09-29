@@ -2,7 +2,7 @@
 John Locke 手稿转写平台 —— Django 配置。
 
 采用前后端分离架构：Django + DRF 提供 REST API，Vue3 作为独立前端。
-数据库使用 SQLite。手稿识别通过 Agnes AI（OpenAI 兼容接口）完成，
+数据库使用 SQLite。手稿识别通过 OpenRouter（OpenAI 兼容接口，默认 Gemini 模型）完成，
 相关密钥请在项目根目录的 .env 文件或环境变量中配置。
 """
 from datetime import timedelta
@@ -130,17 +130,21 @@ CORS_ALLOWED_ORIGINS = [
 CORS_ALLOW_CREDENTIALS = True
 
 # ---------------------------------------------------------------------------
-# Agnes AI 手稿识别接口配置
-#   AGNES_API_KEY  ——  请在 .env 中填写你自己的密钥（此处留空）
-#   AGNES_BASE_URL ——  OpenAI 兼容的接口基地址
-#   AGNES_MODEL    ——  用于视觉识别的多模态模型名称
+# 手稿识别接口配置（OpenRouter，OpenAI 兼容）
+#   RECOGNITION_API_KEY   ——  OpenRouter API Key（sk-or-...），请在 .env 中填写
+#   RECOGNITION_BASE_URL  ——  OpenAI 兼容的接口基地址
+#   RECOGNITION_MODEL     ——  用于视觉识别的多模态模型名称
+#   RECOGNITION_SITE_URL  ——  可选，OpenRouter HTTP-Referer（站点域名）
+#   RECOGNITION_SITE_NAME ——  可选，OpenRouter X-Title（站点名称）
 # ---------------------------------------------------------------------------
-AGNES_API_KEY = env("AGNES_API_KEY", "")
-AGNES_BASE_URL = env("AGNES_BASE_URL", "https://apihub.agnes-ai.com/v1")
-AGNES_MODEL = env("AGNES_MODEL", "gpt-4o")
-AGNES_TIMEOUT = int(env("AGNES_TIMEOUT", "120"))
-AGNES_PROMPT = env(
-    "AGNES_PROMPT",
+RECOGNITION_API_KEY = env("RECOGNITION_API_KEY", "")
+RECOGNITION_BASE_URL = env("RECOGNITION_BASE_URL", "https://openrouter.ai/api/v1")
+RECOGNITION_MODEL = env("RECOGNITION_MODEL", "google/gemini-3.8-flash")
+RECOGNITION_TIMEOUT = int(env("RECOGNITION_TIMEOUT", "120"))
+RECOGNITION_SITE_URL = env("RECOGNITION_SITE_URL", "")
+RECOGNITION_SITE_NAME = env("RECOGNITION_SITE_NAME", "John Locke Manuscript Platform")
+RECOGNITION_PROMPT = env(
+    "RECOGNITION_PROMPT",
     (
         "You are an expert palaeographer specialising in the handwriting of "
         "John Locke (1632–1704). Transcribe the handwritten text in this "

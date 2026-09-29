@@ -11,12 +11,12 @@
           ├── /api/     → 反代 gunicorn (127.0.0.1:8000) → Django
           ├── /media/   → 直接托管 backend/media/（用户上传 + 导入的手稿图）
           └── /static/  → 托管 backend/staticfiles/（Django admin 用）
-Django → 出站调用 Agnes API (apihub.agnes-ai.com)
+Django → 出站调用 OpenRouter API (openrouter.ai) 进行手稿识别
 ```
 
 - 无本地 ML/GPU，识别为远程 API 转发 → **2核2G ECS 即可**，2核4G 更宽裕。
 - 数据库为 SQLite（单文件 `backend/db.sqlite3`），单机低并发足够。
-- 关键超时：识别同步调用 Agnes（默认 120s），故 gunicorn 与 nginx 超时均设为 300s。
+- 关键超时：识别同步调用 OpenRouter（默认 120s），故 gunicorn 与 nginx 超时均设为 300s。
 
 ## 本目录文件
 
@@ -87,7 +87,7 @@ python3 -m venv .venv
 cp ../deploy/env.production.example .env
 # 生成 SECRET_KEY：
 .venv/bin/python -c "import secrets; print(secrets.token_urlsafe(64))"
-# 编辑 .env：填入上一步的 SECRET_KEY、你的 AGNES_API_KEY，确认 DEBUG=False、域名正确
+# 编辑 .env：填入上一步的 SECRET_KEY、你的 RECOGNITION_API_KEY（OpenRouter），确认 DEBUG=False、域名正确
 nano .env
 
 # 迁移 + 导入手稿数据集 + 收集静态文件
@@ -172,3 +172,71 @@ cd /opt/john-locke
 - 环境密钥：`backend/.env`
 
 定期把这几项打包备份（可挂载阿里云 OSS 或定时 `tar` + 下载）。
+
+## 六、整机迁移（自定义镜像）
+
+把当前轻量应用服务器整机做成**自定义镜像**，用它开一台新的轻量服务器。
+镜像会包含代码、venv、`db.sqlite3`、`media/`、`.env`、nginx/systemd 配置，
+迁移后基本"开机即用"，只需处理域名/证书/IP 相关的少量配置。
+
+### 1. 旧服务器：先让数据落盘
+
+创建镜像前停掉写库服务，避免 SQLite 处于半写状态：
+
+```bash
+sudo systemctl stop john-locke
+# 确认关键数据都在盘上：backend/db.sqlite3、backend/media/、backend/.env
+```
+
+### 2. 创建自定义镜像
+
+阿里云 **轻量应用服务器控制台** → 选中当前实例 → **更多 / 镜像 → 创建自定义镜像**，
+命名如 `john-locke-YYYYMMDD`，等待镜像状态变为「可用」。
+（创建完可以先把旧实例 `sudo systemctl start john-locke` 恢复对外服务，等新机验证无误再释放。）
+
+### 3. 用该镜像开新的轻量服务器
+
+- **同地域（推荐，最简单）**：在香港地域新建轻量实例时，「镜像」处选
+  **自定义镜像 → john-locke-YYYYMMDD** 即可。
+- **跨地域**：轻量自定义镜像不能直接跨地域使用，需先在控制台把镜像**拷贝到目标地域**
+  （或先「共享到 ECS 自定义镜像」再跨地域复制），完成后再用它开实例。若无特别原因，建议保持同地域。
+
+### 4. 新机开机后校验
+
+```bash
+# 确认服务随开机自启（镜像已带 enable）
+sudo systemctl status john-locke nginx
+# 若未自启则手动拉起
+sudo systemctl start john-locke
+```
+
+若新机换了公网 IP 或域名，编辑 `backend/.env` 并同步这几项，然后重启：
+
+```bash
+nano /opt/john-locke/backend/.env
+#   DJANGO_ALLOWED_HOSTS   —— 新域名/IP
+#   CORS_ALLOWED_ORIGINS   —— 新前端来源
+#   RECOGNITION_SITE_URL   —— 新站点 URL（OpenRouter 归属头，可选）
+sudo systemctl restart john-locke
+```
+
+### 5. 切流量与证书
+
+- 把域名 `john-locke.ccwu.cc` 的 A 记录解析到**新实例公网 IP**。
+- 证书二选一：
+  - 新机重新申请：`sudo certbot --nginx -d john-locke.ccwu.cc`；
+  - 或从旧机迁移整个 `/etc/letsencrypt/` 目录后 `sudo systemctl reload nginx`。
+- **安全组**：新实例放行入方向 **22 / 80 / 443**，**不要**放行 8000。
+
+### 6. 验证后再释放旧机
+
+浏览器访问站点 → 登录 → 上传一张手稿触发识别，确认识别（OpenRouter）、
+手稿库浏览与跳页均正常后，再释放旧实例。
+
+> 若担心「创建镜像」时点与「新机上线」之间旧机又产生了新数据（新用户上传/新识别），
+> 可在新机上线后，从旧机单独 rsync 一次增量：
+> ```bash
+> rsync -avz deploy@<旧机IP>:/opt/john-locke/backend/media/ /opt/john-locke/backend/media/
+> rsync -avz deploy@<旧机IP>:/opt/john-locke/backend/db.sqlite3 /opt/john-locke/backend/db.sqlite3
+> sudo systemctl restart john-locke
+> ```

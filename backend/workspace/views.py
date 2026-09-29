@@ -4,7 +4,11 @@ from rest_framework import parsers, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from .agnes import AgnesAPIError, AgnesConfigError, transcribe_image
+from .recognition import (
+    RecognitionAPIError,
+    RecognitionConfigError,
+    transcribe_image,
+)
 from .models import Folder, Recognition, UserImage
 from .serializers import (
     FolderSerializer,
@@ -111,9 +115,9 @@ class UserImageViewSet(viewsets.ModelViewSet):
         try:
             text = transcribe_image(Path(image.image.path))
             recognition.text = text
-            recognition.model_name = settings.AGNES_MODEL
+            recognition.model_name = settings.RECOGNITION_MODEL
             recognition.status = Recognition.Status.DONE
-        except (AgnesConfigError, AgnesAPIError) as exc:
+        except (RecognitionConfigError, RecognitionAPIError) as exc:
             recognition.status = Recognition.Status.FAILED
             recognition.error = str(exc)
         recognition.save()

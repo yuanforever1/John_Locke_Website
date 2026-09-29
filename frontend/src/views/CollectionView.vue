@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
 import client from '@/api/client'
 
@@ -11,6 +11,9 @@ const search = ref('')
 const page = ref(1)
 const totalCount = ref(0)
 const pageSize = 24
+const jumpInput = ref('')
+
+const totalPages = computed(() => Math.max(1, Math.ceil(totalCount.value / pageSize)))
 
 async function loadCollection() {
   const res = await client.get(`/collections/${route.params.slug}/`)
@@ -41,6 +44,19 @@ function changePage(delta) {
   if (next < 1 || (next - 1) * pageSize >= totalCount.value) return
   page.value = next
   loadPages()
+}
+
+function goToPage(n) {
+  const target = Math.trunc(Number(n))
+  if (!Number.isFinite(target) || target < 1 || target > totalPages.value) return
+  if (target === page.value) return
+  page.value = target
+  loadPages()
+}
+
+function onJump() {
+  goToPage(jumpInput.value)
+  jumpInput.value = ''
 }
 
 onMounted(async () => {
@@ -99,7 +115,23 @@ watch(() => route.params.slug, async () => {
       <button class="btn btn-sm" @click="changePage(-1)" :disabled="page === 1">
         ‹ 上一页
       </button>
-      <span class="muted small">第 {{ page }} 页</span>
+
+      <div class="jump">
+        <span class="muted small">第 {{ page }} / {{ totalPages }} 页</span>
+        <span class="jump-sep">·</span>
+        <label class="jump-label small muted">跳转到</label>
+        <input
+          v-model="jumpInput"
+          @keyup.enter="onJump"
+          class="jump-input"
+          type="number"
+          min="1"
+          :max="totalPages"
+          :placeholder="String(page)"
+        />
+        <button class="btn btn-sm" @click="onJump" :disabled="!jumpInput">跳转</button>
+      </div>
+
       <button
         class="btn btn-sm"
         @click="changePage(1)"
@@ -214,5 +246,28 @@ watch(() => route.params.slug, async () => {
   justify-content: center;
   gap: 1.5rem;
   margin-top: 3rem;
+  flex-wrap: wrap;
+}
+.jump {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.jump-sep {
+  color: var(--line);
+}
+.jump-input {
+  width: 4.5rem;
+  padding: 0.35rem 0.5rem;
+  font-family: var(--serif-body);
+  font-size: 0.95rem;
+  text-align: center;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 1px;
+}
+.jump-input:focus {
+  outline: none;
+  border-color: var(--gold);
 }
 </style>
