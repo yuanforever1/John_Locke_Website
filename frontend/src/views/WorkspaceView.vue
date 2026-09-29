@@ -17,6 +17,13 @@ const fileInput = ref(null)
 const busyIds = ref(new Set())
 const viewer = ref(null) // 当前查看识别结果的图片
 
+// 可自主选择的识别模型（默认 flash，速度快；pro 质量更高）。
+const models = [
+  { value: 'google/gemini-3.8-flash', label: 'Gemini 3.8 Flash · 快速' },
+  { value: 'google/gemini-3.1-pro-preview', label: 'Gemini 3.1 Pro · 高精度' },
+]
+const selectedModel = ref(models[0].value)
+
 const currentFolderName = computed(() => {
   if (currentFolder.value === 'root') return '根目录'
   const f = folders.value.find((x) => x.id === currentFolder.value)
@@ -146,7 +153,9 @@ async function recognize(img) {
   s.add(img.id)
   busyIds.value = s
   try {
-    const res = await client.post(`/images/${img.id}/recognize/`)
+    const res = await client.post(`/images/${img.id}/recognize/`, {
+      model: selectedModel.value,
+    })
     img.recognition = res.data
     if (res.data.status === 'failed') flash(res.data.error || '识别失败。', true)
     else flash('识别完成。')
@@ -164,7 +173,10 @@ async function batchRecognize() {
   if (!ids.length) return
   busyIds.value = new Set(ids)
   try {
-    const res = await client.post('/images/batch_recognize/', { ids })
+    const res = await client.post('/images/batch_recognize/', {
+      ids,
+      model: selectedModel.value,
+    })
     for (const item of res.data.results) {
       const img = images.value.find((i) => i.id === item.id)
       if (img) img.recognition = item.recognition
@@ -200,7 +212,7 @@ onMounted(async () => {
       <p class="eyebrow">Scriptorium · 我的工作区</p>
       <h1>手稿工作台</h1>
       <p class="muted lede">
-        建立文件夹以整理你的手稿影像，上传后即可交由 Agnes 智能识别为可读文本。
+        建立文件夹以整理你的手稿影像，上传后即可交由 Gemini 智能识别为可读文本。
       </p>
     </div>
 
@@ -252,6 +264,14 @@ onMounted(async () => {
             <span class="muted small">{{ images.length }} 张</span>
           </div>
           <div class="mt-actions">
+            <label class="model-picker" title="选择识别模型">
+              <span class="mp-label muted small">模型</span>
+              <select v-model="selectedModel" class="mp-select">
+                <option v-for="m in models" :key="m.value" :value="m.value">
+                  {{ m.label }}
+                </option>
+              </select>
+            </label>
             <button v-if="images.length" class="btn btn-sm" @click="selectAll">
               {{ selected.size === images.length ? '取消全选' : '全选' }}
             </button>
@@ -347,7 +367,7 @@ onMounted(async () => {
           </div>
         </div>
         <div class="modal-foot muted small">
-          模型 · {{ viewer.recognition.model_name || 'Agnes' }}
+          模型 · {{ viewer.recognition.model_name || '—' }}
         </div>
       </div>
     </div>
@@ -494,8 +514,31 @@ onMounted(async () => {
 }
 .mt-actions {
   display: flex;
+  align-items: center;
   gap: 0.6rem;
   flex-wrap: wrap;
+}
+.model-picker {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.mp-label {
+  letter-spacing: 0.1em;
+}
+.mp-select {
+  padding: 0.35rem 0.5rem;
+  font-family: var(--serif-body);
+  font-size: 0.8rem;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 1px;
+  color: var(--ink);
+  cursor: pointer;
+}
+.mp-select:focus {
+  outline: none;
+  border-color: var(--gold);
 }
 .dropzone {
   min-height: 300px;

@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from .recognition import (
     RecognitionAPIError,
     RecognitionConfigError,
+    resolve_model,
     transcribe_image,
 )
 from .models import Folder, Recognition, UserImage
@@ -87,35 +88,35 @@ class UserImageViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"])
     def recognize(self, request, pk=None):
         image = self.get_object()
-        result = self._run_recognition(image)
+        result = self._run_recognition(image, request.data.get("model"))
         return Response(result)
 
     @action(detail=False, methods=["post"])
     def batch_recognize(self, request):
         ids = request.data.get("ids") or []
+        model = request.data.get("model")
         images = self.get_queryset().filter(id__in=ids)
         results = []
         for image in images:
             results.append(
                 {
                     "id": image.id,
-                    "recognition": self._run_recognition(image),
+                    "recognition": self._run_recognition(image, model),
                 }
             )
         return Response({"results": results})
 
-    def _run_recognition(self, image: UserImage):
+    def _run_recognition(self, image: UserImage, model: str | None = None):
         recognition, _ = Recognition.objects.get_or_create(image=image)
         recognition.status = Recognition.Status.PROCESSING
         recognition.error = ""
         recognition.save(update_fields=["status", "error", "updated_at"])
 
-        from django.conf import settings
-
+        chosen = resolve_model(model)
         try:
-            text = transcribe_image(Path(image.image.path))
+            text = transcribe_image(Path(image.image.path), chosen)
             recognition.text = text
-            recognition.model_name = settings.RECOGNITION_MODEL
+            recognition.model_name = chosen
             recognition.status = Recognition.Status.DONE
         except (RecognitionConfigError, RecognitionAPIError) as exc:
             recognition.status = Recognition.Status.FAILED
