@@ -1,6 +1,6 @@
 # 约翰·洛克手写体识别平台 · John Locke Manuscript Atelier
 
-面向数字人文研究的洛克手稿转写与识别平台。前后端分离：**Django + DRF** 提供 REST API，**Vue 3 + Vite** 构建古典风格前端，数据库使用 **SQLite**，手稿识别通过 **Agnes AI**（OpenAI 兼容接口）完成。
+面向数字人文研究的洛克手稿转写与识别平台。前后端分离：**Django + DRF** 提供 REST API，**Vue 3 + Vite** 构建古典风格前端，数据库使用 **SQLite**，手稿识别通过 **OpenRouter**（OpenAI 兼容接口，默认 Google Gemini）完成。
 
 ---
 
@@ -26,7 +26,7 @@ John_Locke_Website/
 │   ├── locke_platform/       # 项目配置
 │   ├── accounts/             # 用户档案与认证
 │   ├── manuscripts/          # 系统手稿集 / 页 + 数据集导入命令
-│   ├── workspace/            # 用户文件夹 / 图片 / 识别（含 Agnes 服务）
+│   ├── workspace/            # 用户文件夹 / 图片 / 识别（含 OpenRouter 识别服务）
 │   ├── requirements.txt
 │   └── .env.example
 └── frontend/                 # Vue3 前端
@@ -61,7 +61,7 @@ John_Locke_Website/
 cd backend
 pip install -r requirements.txt
 
-# 配置环境变量（可选，含 Agnes 密钥）
+# 配置环境变量（可选，含 OpenRouter 密钥）
 copy .env.example .env    # 然后编辑 .env
 
 python manage.py migrate
@@ -84,18 +84,18 @@ npm run dev
 
 ---
 
-## 五、配置 Agnes 识别接口
+## 五、配置识别接口（OpenRouter）
 
-手稿识别使用 Agnes AI 的 OpenAI 兼容多模态接口。请在 `backend/.env` 中填写：
+手稿识别使用 OpenRouter 的 OpenAI 兼容多模态接口，默认调用 Google Gemini。请在 `backend/.env` 中填写：
 
 ```
-AGNES_API_KEY=你的密钥          # 默认留空，需自行填写
-AGNES_BASE_URL=https://apihub.agnes-ai.com/v1
-AGNES_MODEL=gpt-4o             # 具备视觉能力的模型名称
+RECOGNITION_API_KEY=你的密钥                    # OpenRouter API Key（sk-or-...），默认留空需自行填写
+RECOGNITION_BASE_URL=https://openrouter.ai/api/v1
+RECOGNITION_MODEL=google/gemini-3.8-flash      # 快模型；改成 google/gemini-3.1-pro-preview 可切到高质量 pro
 ```
 
 > 未配置密钥时，识别接口会返回明确的提示，其余功能不受影响。
-> 识别逻辑封装于 `backend/workspace/agnes.py`，若接口约定不同，只需在此调整请求 / 解析方式。
+> 识别逻辑封装于 `backend/workspace/recognition.py`，若接口约定不同，只需在此调整请求 / 解析方式。
 
 ---
 

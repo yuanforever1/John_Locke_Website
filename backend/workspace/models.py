@@ -60,7 +60,7 @@ class UserImage(models.Model):
 
 
 class Recognition(models.Model):
-    """一张工作区图片的 Agnes 识别结果。"""
+    """一张工作区图片的识别结果。"""
 
     class Status(models.TextChoices):
         PENDING = "pending", "待识别"
